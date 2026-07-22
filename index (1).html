@@ -1,0 +1,120 @@
+import { useState } from 'react'
+import { CheckCircle2, Circle, AlertTriangle } from 'lucide-react'
+import { PACKING_CATEGORIES, EMERGENCY_CONTACTS } from '../data/packing'
+import clsx from 'clsx'
+
+export default function PackingList() {
+  const [checked, setChecked] = useState(new Set())
+
+  const toggle = (id) => setChecked(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
+
+  const allItems = PACKING_CATEGORIES.flatMap(c => c.items)
+  const totalItems = allItems.length
+  const checkedCount = allItems.filter(i => checked.has(i.id)).length
+  const pct = Math.round(checkedCount / totalItems * 100)
+
+  return (
+    <div className="space-y-5 max-w-4xl mx-auto animate-fade-in">
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="section-title">Equipaje 🎒</h1>
+          <p className="text-sm text-bark-500 dark:text-bark-400 mt-1">Lista completa para Costa Rica en enero</p>
+        </div>
+        <div className="card px-4 py-3 text-right min-w-[120px]">
+          <div className="text-2xl font-display font-bold text-bark-900 dark:text-white">{pct}%</div>
+          <div className="text-xs text-bark-500 dark:text-bark-400">{checkedCount}/{totalItems} items</div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="card p-4">
+        <div className="flex justify-between text-xs text-bark-500 dark:text-bark-400 mb-2">
+          <span>Progreso del equipaje</span>
+          <span>{checkedCount} de {totalItems}</span>
+        </div>
+        <div className="h-3 bg-bark-100 dark:bg-bark-700 rounded-full overflow-hidden">
+          <div
+            className={clsx(
+              'h-full rounded-full transition-all duration-500',
+              pct === 100 ? 'bg-celadon-500' : 'bg-gradient-to-r from-jungle-500 to-celadon-400'
+            )}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        {pct === 100 && (
+          <p className="text-xs text-center text-celadon-600 dark:text-celadon-400 font-medium mt-2">¡Todo listo! 🌿 Pura vida</p>
+        )}
+      </div>
+
+      {/* Categories */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {PACKING_CATEGORIES.map(cat => {
+          const catChecked = cat.items.filter(i => checked.has(i.id)).length
+          return (
+            <div key={cat.id} className="card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-display font-bold text-base text-bark-900 dark:text-white">
+                  {cat.emoji} {cat.name}
+                </h2>
+                <span className="text-xs text-bark-400 dark:text-bark-500">{catChecked}/{cat.items.length}</span>
+              </div>
+              <div className="space-y-1.5">
+                {cat.items.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => toggle(item.id)}
+                    className="w-full flex items-start gap-2.5 text-left group"
+                  >
+                    {checked.has(item.id)
+                      ? <CheckCircle2 size={16} className="text-celadon-500 shrink-0 mt-0.5" />
+                      : <Circle size={16} className="text-bark-300 dark:text-bark-600 shrink-0 mt-0.5 group-hover:text-bark-400 dark:group-hover:text-bark-500 transition-colors" />
+                    }
+                    <span className={clsx(
+                      'text-sm transition-colors',
+                      checked.has(item.id)
+                        ? 'line-through text-bark-400 dark:text-bark-500'
+                        : 'text-bark-700 dark:text-bark-300',
+                      item.critical && !checked.has(item.id) && 'font-medium'
+                    )}>
+                      {item.name}
+                      {item.critical && !checked.has(item.id) && (
+                        <span className="ml-1.5 text-[10px] font-bold text-coral-500 uppercase tracking-wide">CLAVE</span>
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Emergency contacts */}
+      <div className="card p-5">
+        <h2 className="font-display font-bold text-base text-bark-900 dark:text-white mb-4">
+          🆘 Contactos de emergencia
+        </h2>
+        <div className="grid md:grid-cols-2 gap-2">
+          {EMERGENCY_CONTACTS.map((c, i) => (
+            <div key={i} className={clsx(
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm',
+              c.category === 'emergencia' ? 'bg-coral-400/10' :
+              c.category === 'medico' ? 'bg-ocean-300/10' :
+              'bg-bark-50 dark:bg-bark-700/30'
+            )}>
+              <div>
+                <div className="font-medium text-bark-800 dark:text-bark-200 text-xs">{c.name}</div>
+                <div className="font-mono font-bold text-sm text-bark-900 dark:text-white">{c.phone}</div>
+                {c.note && <div className="text-[10px] text-bark-500 dark:text-bark-400 mt-0.5">{c.note}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
